@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import createAuth from '@tridnguyen/auth/spa';
+  import { schwab } from './schwab';
 
   const authConfig = {
     domain: 'tridnguyen.auth0.com',
@@ -15,15 +16,16 @@
     ? 'http://localhost:3000/schwab'
     : 'https://sheets.cloud.tridnguyen.com/schwab';
 
+  /** @type {any} */
   let auth;
   let isLoading = true;
   let isAuthenticated = false;
+  /** @type {{name?: string, email?: string} | null} */
   let user = null;
   let token = '';
   let authStatus = '';
   let errorMessage = '';
   let isCallingSchwab = false;
-  let schwabResponse = '';
   let schwabError = '';
 
   function isAuthCallback() {
@@ -37,7 +39,7 @@
     isAuthenticated = false;
     user = null;
     token = '';
-    schwabResponse = '';
+    schwab.set('');
     schwabError = '';
   }
 
@@ -86,7 +88,7 @@
 
       await refreshAuthState();
     } catch (error) {
-      const authError = error;
+      const authError = /** @type {{error?: string, message?: string}} */ (error || {});
       if (authError?.error === 'login_required' || authError?.error === 'unauthorized') {
         clearAuthState();
       } else {
@@ -122,13 +124,13 @@
   async function callSchwab() {
     if (!token) {
       schwabError = 'No JWT token available. Please log in again.';
-      schwabResponse = '';
+      schwab.set('');
       return;
     }
 
     isCallingSchwab = true;
     schwabError = '';
-    schwabResponse = '';
+    schwab.set('');
 
     try {
       const response = await fetch(schwabUrl, {
@@ -144,12 +146,13 @@
       }
 
       try {
-        schwabResponse = JSON.stringify(JSON.parse(text), null, 2);
+        schwab.set(JSON.stringify(JSON.parse(text), null, 2));
       } catch {
-        schwabResponse = text;
+        schwab.set(text);
       }
     } catch (error) {
-      schwabError = error?.message || 'Unable to call /schwab endpoint.';
+      const requestError = /** @type {{message?: string}} */ (error || {});
+      schwabError = requestError.message || 'Unable to call /schwab endpoint.';
     } finally {
       isCallingSchwab = false;
     }
@@ -191,10 +194,10 @@
         <p class="error">{schwabError}</p>
       {/if}
 
-      {#if schwabResponse}
+      {#if $schwab}
         <div class="response-card">
           <p><strong>/schwab response</strong></p>
-          <pre>{schwabResponse}</pre>
+          <pre>{$schwab}</pre>
         </div>
       {/if}
     {:else}
