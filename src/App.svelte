@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import createAuth from '@tridnguyen/auth/spa';
+  import Monthly from './Monthly.svelte';
   import { schwab } from './schwab';
 
   const authConfig = {
@@ -200,6 +201,8 @@
           <pre>{$schwab}</pre>
         </div>
       {/if}
+
+      <Monthly />
     {:else}
       <button type="button" on:click={login}>Log In</button>
     {/if}
