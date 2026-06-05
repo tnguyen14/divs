@@ -1,4 +1,6 @@
 <script>
+  import { months } from './months';
+
   const columns = [
     'Month',
     'Savings',
@@ -27,9 +29,22 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td colspan={columns.length}>No monthly data yet.</td>
-        </tr>
+        {#each $months as month}
+          <tr>
+            <td>{month}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        {/each}
       </tbody>
     </table>
   </div>
