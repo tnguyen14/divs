@@ -11,6 +11,9 @@
 
   const basePath = import.meta.env.BASE_URL || '/';
   const returnTo = `${window.location.origin}${basePath}`;
+  const schwabUrl = import.meta.env.DEV
+    ? 'http://localhost:3000/schwab'
+    : 'https://sheets.cloud.tridnguyen.com/schwab';
 
   let auth;
   let isLoading = true;
@@ -19,6 +22,9 @@
   let token = '';
   let authStatus = '';
   let errorMessage = '';
+  let isCallingSchwab = false;
+  let schwabResponse = '';
+  let schwabError = '';
 
   function isAuthCallback() {
     return (
@@ -31,6 +37,8 @@
     isAuthenticated = false;
     user = null;
     token = '';
+    schwabResponse = '';
+    schwabError = '';
   }
 
   async function refreshAuthState() {
@@ -111,6 +119,42 @@
     });
   }
 
+  async function callSchwab() {
+    if (!token) {
+      schwabError = 'No JWT token available. Please log in again.';
+      schwabResponse = '';
+      return;
+    }
+
+    isCallingSchwab = true;
+    schwabError = '';
+    schwabResponse = '';
+
+    try {
+      const response = await fetch(schwabUrl, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const text = await response.text();
+      if (!response.ok) {
+        throw new Error(`Request failed (${response.status}): ${text}`);
+      }
+
+      try {
+        schwabResponse = JSON.stringify(JSON.parse(text), null, 2);
+      } catch {
+        schwabResponse = text;
+      }
+    } catch (error) {
+      schwabError = error?.message || 'Unable to call /schwab endpoint.';
+    } finally {
+      isCallingSchwab = false;
+    }
+  }
+
   onMount(async () => {
     await initializeAuth();
   });
@@ -136,7 +180,23 @@
         <p><strong>Email:</strong> {user?.email || 'N/A'}</p>
         <p><strong>Token:</strong> <span class="token-value">{token ? token : 'Unavailable'}</span></p>
       </div>
-      <button type="button" on:click={logout}>Log Out</button>
+      <div class="actions">
+        <button type="button" on:click={callSchwab} disabled={isCallingSchwab}>
+          {isCallingSchwab ? 'Calling /schwab...' : 'Call /schwab'}
+        </button>
+        <button type="button" on:click={logout}>Log Out</button>
+      </div>
+
+      {#if schwabError}
+        <p class="error">{schwabError}</p>
+      {/if}
+
+      {#if schwabResponse}
+        <div class="response-card">
+          <p><strong>/schwab response</strong></p>
+          <pre>{schwabResponse}</pre>
+        </div>
+      {/if}
     {:else}
       <button type="button" on:click={login}>Log In</button>
     {/if}

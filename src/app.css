@@ -46,6 +46,30 @@ body {
   vertical-align: top;
 }
 
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.response-card {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  text-align: left;
+  background: #ffffff;
+}
+
+.response-card pre {
+  margin: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 button {
   border: none;
   border-radius: 8px;
@@ -58,4 +82,9 @@ button {
 
 button:hover {
   background: #115e59;
+}
+
+button:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
 }
