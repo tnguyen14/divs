@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { Copy } from '@lucide/svelte';
   import createAuth from '@tridnguyen/auth/spa';
   import Monthly from './Monthly.svelte';
   import { schwab } from './schwab';
@@ -28,6 +29,7 @@
   let errorMessage = '';
   let schwabLoading = false;
   let schwabError = '';
+  let tokenCopyMessage = '';
 
   function isAuthCallback() {
     return (
@@ -43,6 +45,7 @@
     schwab.set(null);
     schwabLoading = false;
     schwabError = '';
+    tokenCopyMessage = '';
   }
 
   async function refreshAuthState() {
@@ -123,6 +126,16 @@
     });
   }
 
+  async function copyToken() {
+    try {
+      await navigator.clipboard.writeText(token);
+      tokenCopyMessage = 'Token copied to clipboard.';
+    } catch (error) {
+      tokenCopyMessage = 'Unable to copy token.';
+      console.error('Failed to copy token:', error);
+    }
+  }
+
   async function loadSchwabData() {
     if (!token) {
       schwabError = 'No JWT token available. Please log in again.';
@@ -184,7 +197,20 @@
     {/if}
 
     {#if isAuthenticated}
-      <div class="user-card">
+      <div class="user-card relative pr-12">
+        {#if token}
+          <div class="tooltip tooltip-left absolute right-3 top-3" data-tip={tokenCopyMessage || 'Copy token'}>
+            <button
+              class="btn btn-ghost btn-xs btn-circle"
+              type="button"
+              on:click={copyToken}
+              aria-label="Copy token"
+            >
+              <Copy size={14} aria-hidden="true" />
+            </button>
+          </div>
+        {/if}
+
         <p><strong>Name:</strong> {user?.name || 'Unknown user'}</p>
         <p><strong>Email:</strong> {user?.email || 'N/A'}</p>
       </div>
@@ -202,3 +228,4 @@
     {/if}
   {/if}
 </main>
+
