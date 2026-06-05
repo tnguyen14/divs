@@ -26,7 +26,7 @@
   let token = '';
   let authStatus = '';
   let errorMessage = '';
-  let isCallingSchwab = false;
+  let schwabLoading = false;
   let schwabError = '';
 
   function isAuthCallback() {
@@ -40,7 +40,8 @@
     isAuthenticated = false;
     user = null;
     token = '';
-    schwab.set('');
+    schwab.set(null);
+    schwabLoading = false;
     schwabError = '';
   }
 
@@ -122,16 +123,15 @@
     });
   }
 
-  async function callSchwab() {
+  async function loadSchwabData() {
     if (!token) {
       schwabError = 'No JWT token available. Please log in again.';
-      schwab.set('');
+      schwab.set(null);
       return;
     }
 
-    isCallingSchwab = true;
+    schwabLoading = true;
     schwabError = '';
-    schwab.set('');
 
     try {
       const response = await fetch(schwabUrl, {
@@ -141,26 +141,27 @@
         },
       });
 
-      const text = await response.text();
       if (!response.ok) {
-        throw new Error(`Request failed (${response.status}): ${text}`);
+        throw new Error(`Request failed (${response.status})`);
       }
 
-      try {
-        schwab.set(JSON.stringify(JSON.parse(text), null, 2));
-      } catch {
-        schwab.set(text);
-      }
+      const payload = await response.json();
+      schwab.set(payload);
     } catch (error) {
       const requestError = /** @type {{message?: string}} */ (error || {});
       schwabError = requestError.message || 'Unable to call /schwab endpoint.';
+      schwab.set(null);
     } finally {
-      isCallingSchwab = false;
+      schwabLoading = false;
     }
   }
 
   onMount(async () => {
     await initializeAuth();
+
+    if (isAuthenticated) {
+      await loadSchwabData();
+    }
   });
 </script>
 
@@ -178,28 +179,21 @@
       <p class="status">{authStatus}</p>
     {/if}
 
+    {#if schwabLoading}
+      <p class="status">Loading Schwab data...</p>
+    {/if}
+
     {#if isAuthenticated}
       <div class="user-card">
         <p><strong>Name:</strong> {user?.name || 'Unknown user'}</p>
         <p><strong>Email:</strong> {user?.email || 'N/A'}</p>
-        <p><strong>Token:</strong> <span class="token-value">{token ? token : 'Unavailable'}</span></p>
       </div>
       <div class="actions">
-        <button type="button" on:click={callSchwab} disabled={isCallingSchwab}>
-          {isCallingSchwab ? 'Calling /schwab...' : 'Call /schwab'}
-        </button>
         <button type="button" on:click={logout}>Log Out</button>
       </div>
 
       {#if schwabError}
         <p class="error">{schwabError}</p>
-      {/if}
-
-      {#if $schwab}
-        <div class="response-card">
-          <p><strong>/schwab response</strong></p>
-          <pre>{$schwab}</pre>
-        </div>
       {/if}
 
       <Monthly />

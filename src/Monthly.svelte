@@ -1,5 +1,6 @@
 <script>
   import { months } from './months';
+  import { schwabByMonth } from './schwab';
 
   const columns = [
     'Month',
@@ -32,7 +33,7 @@
         {#each $months as month}
           <tr>
             <td>{month}</td>
-            <td></td>
+            <td>{($schwabByMonth[month] || []).length}</td>
             <td></td>
             <td></td>
             <td></td>

@@ -7,7 +7,7 @@ const monthList = [];
 const firstMonth = new Date(Date.UTC(2020, 10, 1));
 const now = new Date();
 const latestMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-const formatter = new Intl.DateTimeFormat('en-US', {
+export const monthFormatter = new Intl.DateTimeFormat('en-US', {
   month: 'short',
   year: 'numeric',
   timeZone: 'UTC',
@@ -18,7 +18,7 @@ for (
   monthDate >= firstMonth;
   monthDate = new Date(Date.UTC(monthDate.getUTCFullYear(), monthDate.getUTCMonth() - 1, 1))
 ) {
-  monthList.push(formatter.format(monthDate));
+  monthList.push(monthFormatter.format(monthDate));
 }
 
 export const months = writable(monthList);
