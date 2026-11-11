@@ -9,7 +9,10 @@
     domain: 'tridnguyen.auth0.com',
     clientId: 'PjP6M9OtNzBT8VerWH6kpFhi3u4LU7bF',
     audience: 'https://sheets.cloud.tridnguyen.com',
-    scope: 'openid profile email',
+    // Request API scopes at login so the refresh token covers them.
+    // Asking for extra scopes later in getTokenSilently misses the token cache,
+    // falls back to a cross-site iframe that browsers block, and logs the user out.
+    scope: 'openid profile email read:list write:list',
   };
 
   const basePath = import.meta.env.BASE_URL || '/';
@@ -61,12 +64,7 @@
       return;
     }
 
-    token = await auth.getTokenSilently({
-      authorizationParams: {
-        audience: authConfig.audience,
-        scope: 'read:list write:list',
-      },
-    });
+    token = await auth.getTokenSilently();
 
     user = await auth.getUser();
     authStatus = user?.name ? `Hello, ${user.name}` : 'User is logged in';
