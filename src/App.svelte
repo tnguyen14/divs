@@ -61,12 +61,7 @@
       return;
     }
 
-    token = await auth.getTokenSilently({
-      authorizationParams: {
-        audience: authConfig.audience,
-        scope: 'read:list write:list',
-      },
-    });
+    token = await auth.getTokenSilently();
 
     user = await auth.getUser();
     authStatus = user?.name ? `Hello, ${user.name}` : 'User is logged in';
