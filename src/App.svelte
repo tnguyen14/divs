@@ -9,7 +9,7 @@
     domain: 'tridnguyen.auth0.com',
     clientId: 'PjP6M9OtNzBT8VerWH6kpFhi3u4LU7bF',
     audience: 'https://sheets.cloud.tridnguyen.com',
-    scope: 'openid profile email read:list write:list',
+    scope: 'openid profile email',
   };
 
   const basePath = import.meta.env.BASE_URL || '/';
