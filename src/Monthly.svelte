@@ -1,21 +1,12 @@
 <script>
   import { months } from './months';
   import { schwabByMonth } from './schwab';
+  import { columns, sumColumn } from './transactionTypes';
 
-  const columns = [
-    'Month',
-    'Savings',
-    'Deposits',
-    'Dividends',
-    'Sell',
-    'Other Deposits',
-    'Buy',
-    'Tax Withdrawal',
-    'Income Withdrawal',
-    'Other Withdrawals',
-    'Value',
-    'Annualized Dividend %',
-  ];
+  const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+
+  /** @param {number} amount */
+  const formatAmount = (amount) => (amount ? currency.format(amount) : '');
 </script>
 
 <section class="monthly">
@@ -24,24 +15,21 @@
     <table>
       <thead>
         <tr>
+          <th scope="col">Month</th>
           {#each columns as column}
-            <th scope="col">{column}</th>
+            <th scope="col">{column.name}</th>
           {/each}
+          <th scope="col">Value</th>
+          <th scope="col">Annualized Dividend %</th>
         </tr>
       </thead>
       <tbody>
         {#each $months as month}
           <tr>
             <td>{month}</td>
-            <td>{($schwabByMonth[month] || []).length}</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
+            {#each columns as column}
+              <td>{formatAmount(sumColumn(column, $schwabByMonth[month] || []))}</td>
+            {/each}
             <td></td>
             <td></td>
           </tr>
