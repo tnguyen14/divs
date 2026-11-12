@@ -1,7 +1,49 @@
 <script>
   import { months } from './months';
-  import { schwabByMonth } from './schwab';
-  import { columns, sumColumn } from './transactionTypes';
+  import { schwabByMonth, isAction, parseAmount, sumAmount } from './schwab';
+
+  /**
+   * Each column computes a month's value from that month's Schwab records.
+   * `row` holds the values of the columns before it.
+   * @type {{name: string, value: (records: import('./schwab').SchwabRecord[], row: Record<string, number>) => number}[]}
+   */
+  const columns = [
+    { name: 'Savings', value: (records) => sumAmount(records, (r) => r.Type === 'Savings') },
+    {
+      name: 'Deposits',
+      value: (records) => sumAmount(records, (r) => isAction(r, 'deposit') && r.Type !== 'Savings'),
+    },
+    { name: 'Dividends', value: (records) => sumAmount(records, (r) => isAction(r, 'dividend')) },
+    { name: 'Sell', value: (records) => sumAmount(records, (r) => isAction(r, 'sell')) },
+    {
+      name: 'Other Deposits',
+      value: (records, row) =>
+        sumAmount(records, (r) => parseAmount(r.Amount) > 0) -
+        (row['Savings'] + row['Deposits'] + row['Dividends'] + row['Sell']),
+    },
+    { name: 'Buy', value: (records) => sumAmount(records, (r) => isAction(r, 'buy')) },
+    { name: 'Tax Withdrawal', value: (records) => sumAmount(records, (r) => isAction(r, 'tax')) },
+    { name: 'Income Withdrawal', value: (records) => sumAmount(records, (r) => r.Type === 'Income') },
+    {
+      name: 'Other Withdrawals',
+      value: (records, row) =>
+        sumAmount(records, (r) => parseAmount(r.Amount) < 0) -
+        (row['Buy'] + row['Tax Withdrawal'] + row['Income Withdrawal']),
+    },
+  ];
+
+  /**
+   * @param {import('./schwab').SchwabRecord[]} records
+   * @returns {Record<string, number>}
+   */
+  function computeRow(records) {
+    /** @type {Record<string, number>} */
+    const row = {};
+    for (const column of columns) {
+      row[column.name] = column.value(records, row);
+    }
+    return row;
+  }
 
   const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
@@ -25,10 +67,11 @@
       </thead>
       <tbody>
         {#each $months as month}
+          {@const row = computeRow($schwabByMonth[month] || [])}
           <tr>
             <td>{month}</td>
             {#each columns as column}
-              <td>{formatAmount(sumColumn(column, $schwabByMonth[month] || []))}</td>
+              <td>{formatAmount(row[column.name])}</td>
             {/each}
             <td></td>
             <td></td>

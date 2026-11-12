@@ -38,3 +38,51 @@ export const schwab = writable(null);
 
 /** @type {import('svelte/store').Readable<Record<string, SchwabRecord[]>>} */
 export const schwabByMonth = derived([schwab, months], ([$schwab]) => groupSchwabByMonth($schwab));
+
+/**
+ * Named groups of Schwab "Action" values.
+ * Mirrors the "Schwab Actions" table on the Metadata tab of the Personal sheet.
+ * @type {Record<string, string[]>}
+ */
+export const actions = {
+	deposit: ['Funds Received', 'MoneyLink Transfer', 'Bank Interest', 'Journal'],
+	dividend: [
+		'Cash Dividend',
+		'Qualified Dividend',
+		'Non-Qualified Div',
+		'Pr Yr Cash Div',
+		'Special Dividend',
+		'Pr Yr Qualified Div',
+		'Pr Yr Non-Qual Div'
+	],
+	tax: ['Foreign Tax Paid'],
+	buy: ['Buy'],
+	sell: ['Sell']
+};
+
+/**
+ * Parse a formatted Sheets amount like "-$1,234.56" into a number.
+ * @param {unknown} value
+ * @returns {number}
+ */
+export function parseAmount(value) {
+	if (typeof value === 'number') return value;
+	const number = Number(String(value ?? '').replace(/[$,\s]/g, ''));
+	return Number.isFinite(number) ? number : 0;
+}
+
+/**
+ * @param {SchwabRecord} record
+ * @param {string} group - key of `actions`
+ */
+export const isAction = (record, group) => actions[group].includes(/** @type {string} */ (record.Action));
+
+/**
+ * Sum the Amount of records matching a predicate.
+ * @param {SchwabRecord[]} records
+ * @param {(record: SchwabRecord) => boolean} predicate
+ * @returns {number}
+ */
+export function sumAmount(records, predicate) {
+	return records.filter(predicate).reduce((total, record) => total + parseAmount(record.Amount), 0);
+}
