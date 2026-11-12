@@ -4,8 +4,8 @@
 
   /**
    * Each column computes a month's value from that month's Schwab records.
-   * `row` holds the values of the columns before it.
-   * @type {{name: string, value: (records: import('./schwab').SchwabRecord[], row: Record<string, number>) => number}[]}
+   * `totals` holds the totals of the columns before it.
+   * @type {{name: string, value: (records: import('./schwab').SchwabRecord[], totals: Record<string, number>) => number}[]}
    */
   const columns = [
     { name: 'Savings', value: (records) => sumAmount(records, (r) => r.Type === 'Savings') },
@@ -17,27 +17,27 @@
     { name: 'Sell', value: (records) => sumAmount(records, (r) => isAction(r, 'sell')) },
     {
       name: 'Other Deposits',
-      value: (records, row) =>
+      value: (records, totals) =>
         sumAmount(records, (r) => r.Amount > 0) -
-        (row['Savings'] + row['Deposits'] + row['Dividends'] + row['Sell']),
+        (totals['Savings'] + totals['Deposits'] + totals['Dividends'] + totals['Sell']),
     },
     { name: 'Buy', value: (records) => sumAmount(records, (r) => isAction(r, 'buy')) },
     { name: 'Tax Withdrawal', value: (records) => sumAmount(records, (r) => isAction(r, 'tax')) },
     { name: 'Income Withdrawal', value: (records) => sumAmount(records, (r) => r.Type === 'Income') },
     {
       name: 'Other Withdrawals',
-      value: (records, row) =>
+      value: (records, totals) =>
         sumAmount(records, (r) => r.Amount < 0) -
-        (row['Buy'] + row['Tax Withdrawal'] + row['Income Withdrawal']),
+        (totals['Buy'] + totals['Tax Withdrawal'] + totals['Income Withdrawal']),
     },
   ];
 
   /**
-   * Compute one month's row: each column's value, keyed by column name.
-   * Columns run in order, so a column can use the values before it.
+   * Total a month's transactions into each column, keyed by column name.
+   * Columns run in order, so a column can use the totals before it.
    *
    * @example
-   * computeRow([
+   * computeMonthTotals([
    *   { Action: 'MoneyLink Transfer', Type: 'Savings', Amount: 3000 },
    *   { Action: 'Bank Interest', Amount: 1.5 },
    *   { Action: 'Qualified Dividend', Amount: 43.29 },
@@ -57,16 +57,16 @@
    * //   'Other Withdrawals': -100,
    * // }
    *
-   * @param {import('./schwab').SchwabRecord[]} records
+   * @param {import('./schwab').SchwabRecord[]} transactions - all of one month's transactions
    * @returns {Record<string, number>}
    */
-  function computeRow(records) {
+  function computeMonthTotals(transactions) {
     /** @type {Record<string, number>} */
-    const row = {};
+    const totals = {};
     for (const column of columns) {
-      row[column.name] = column.value(records, row);
+      totals[column.name] = column.value(transactions, totals);
     }
-    return row;
+    return totals;
   }
 
   const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
@@ -91,11 +91,11 @@
       </thead>
       <tbody>
         {#each $months as month}
-          {@const row = computeRow($schwabByMonth[month] || [])}
+          {@const totals = computeMonthTotals($schwabByMonth[month] || [])}
           <tr>
             <td>{month}</td>
             {#each columns as column}
-              <td>{formatAmount(row[column.name])}</td>
+              <td>{formatAmount(totals[column.name])}</td>
             {/each}
             <td></td>
             <td></td>
