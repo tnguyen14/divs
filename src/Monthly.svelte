@@ -33,6 +33,30 @@
   ];
 
   /**
+   * Compute one month's row: each column's value, keyed by column name.
+   * Columns run in order, so a column can use the values before it.
+   *
+   * @example
+   * computeRow([
+   *   { Action: 'MoneyLink Transfer', Type: 'Savings', Amount: 3000 },
+   *   { Action: 'Bank Interest', Amount: 1.5 },
+   *   { Action: 'Qualified Dividend', Amount: 43.29 },
+   *   { Action: 'Buy', Amount: -55.37 },
+   *   { Action: 'MoneyLink Transfer', Type: 'Income', Amount: -800 },
+   *   { Action: 'Journal', Amount: -100 },
+   * ]);
+   * // => {
+   * //   'Savings': 3000,
+   * //   'Deposits': 1.5,
+   * //   'Dividends': 43.29,
+   * //   'Sell': 0,
+   * //   'Other Deposits': 0,
+   * //   'Buy': -55.37,
+   * //   'Tax Withdrawal': 0,
+   * //   'Income Withdrawal': -800,
+   * //   'Other Withdrawals': -100,
+   * // }
+   *
    * @param {import('./schwab').SchwabRecord[]} records
    * @returns {Record<string, number>}
    */
