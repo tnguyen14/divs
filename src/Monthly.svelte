@@ -22,7 +22,10 @@
         (totals['Savings'] + totals['Deposits'] + totals['Dividends'] + totals['Sell']),
     },
     { name: 'Buy', value: (records) => sumAmount(records, (r) => isAction(r, 'buy')) },
-    { name: 'Tax Withdrawal', value: (records) => sumAmount(records, (r) => isAction(r, 'tax')) },
+    {
+      name: 'Tax Withdrawal',
+      value: (records) => sumAmount(records, (r) => isAction(r, 'tax') || r.Type === 'Tax'),
+    },
     { name: 'Income Withdrawal', value: (records) => sumAmount(records, (r) => r.Type === 'Income') },
     {
       name: 'Other Withdrawals',
