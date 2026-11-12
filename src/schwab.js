@@ -2,7 +2,7 @@ import { derived, get, writable } from 'svelte/store';
 import { monthFormatter, months } from './months';
 
 /**
- * @typedef {Record<string, unknown>} SchwabRecord
+ * @typedef {Record<string, unknown> & {Amount: number}} SchwabRecord
  */
 
 /**
@@ -61,17 +61,6 @@ export const actions = {
 };
 
 /**
- * Parse a formatted Sheets amount like "-$1,234.56" into a number.
- * @param {unknown} value
- * @returns {number}
- */
-export function parseAmount(value) {
-	if (typeof value === 'number') return value;
-	const number = Number(String(value ?? '').replace(/[$,\s]/g, ''));
-	return Number.isFinite(number) ? number : 0;
-}
-
-/**
  * @param {SchwabRecord} record
  * @param {string} group - key of `actions`
  */
@@ -84,5 +73,5 @@ export const isAction = (record, group) => actions[group].includes(/** @type {st
  * @returns {number}
  */
 export function sumAmount(records, predicate) {
-	return records.filter(predicate).reduce((total, record) => total + parseAmount(record.Amount), 0);
+	return records.filter(predicate).reduce((total, record) => total + record.Amount, 0);
 }

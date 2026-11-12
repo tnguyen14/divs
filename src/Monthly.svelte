@@ -1,6 +1,6 @@
 <script>
   import { months } from './months';
-  import { schwabByMonth, isAction, parseAmount, sumAmount } from './schwab';
+  import { schwabByMonth, isAction, sumAmount } from './schwab';
 
   /**
    * Each column computes a month's value from that month's Schwab records.
@@ -11,14 +11,14 @@
     { name: 'Savings', value: (records) => sumAmount(records, (r) => r.Type === 'Savings') },
     {
       name: 'Deposits',
-      value: (records) => sumAmount(records, (r) => parseAmount(r.Amount) > 0 && isAction(r, 'deposit') && r.Type !== 'Savings'),
+      value: (records) => sumAmount(records, (r) => r.Amount > 0 && isAction(r, 'deposit') && r.Type !== 'Savings'),
     },
     { name: 'Dividends', value: (records) => sumAmount(records, (r) => isAction(r, 'dividend')) },
     { name: 'Sell', value: (records) => sumAmount(records, (r) => isAction(r, 'sell')) },
     {
       name: 'Other Deposits',
       value: (records, row) =>
-        sumAmount(records, (r) => parseAmount(r.Amount) > 0) -
+        sumAmount(records, (r) => r.Amount > 0) -
         (row['Savings'] + row['Deposits'] + row['Dividends'] + row['Sell']),
     },
     { name: 'Buy', value: (records) => sumAmount(records, (r) => isAction(r, 'buy')) },
@@ -27,7 +27,7 @@
     {
       name: 'Other Withdrawals',
       value: (records, row) =>
-        sumAmount(records, (r) => parseAmount(r.Amount) < 0) -
+        sumAmount(records, (r) => r.Amount < 0) -
         (row['Buy'] + row['Tax Withdrawal'] + row['Income Withdrawal']),
     },
   ];
