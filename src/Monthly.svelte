@@ -11,7 +11,7 @@
     { name: 'Savings', value: (records) => sumAmount(records, (r) => r.Type === 'Savings') },
     {
       name: 'Deposits',
-      value: (records) => sumAmount(records, (r) => isAction(r, 'deposit') && r.Type !== 'Savings'),
+      value: (records) => sumAmount(records, (r) => parseAmount(r.Amount) > 0 && isAction(r, 'deposit') && r.Type !== 'Savings'),
     },
     { name: 'Dividends', value: (records) => sumAmount(records, (r) => isAction(r, 'dividend')) },
     { name: 'Sell', value: (records) => sumAmount(records, (r) => isAction(r, 'sell')) },
