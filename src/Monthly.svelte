@@ -64,7 +64,9 @@
     /** @type {Record<string, number>} */
     const totals = {};
     for (const column of columns) {
-      totals[column.name] = column.value(transactions, totals);
+      // Round to cents: summing and subtracting decimals can leave tiny
+      // remainders (e.g. 3.6e-12) that would otherwise show as $0.00.
+      totals[column.name] = Math.round(column.value(transactions, totals) * 100) / 100;
     }
     return totals;
   }
