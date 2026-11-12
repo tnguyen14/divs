@@ -6,6 +6,22 @@ import { monthFormatter, months } from './months';
  */
 
 /**
+ * Parse an "M/D/YYYY" date as local midnight, to match how months.js creates
+ * and formats months. Parsing the parts directly avoids `new Date(string)`,
+ * whose handling of non-ISO strings varies by browser.
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
+function parseDate(value) {
+	const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(value ?? '').trim());
+	if (!match) {
+		return null;
+	}
+	const [, month, day, year] = match.map(Number);
+	return new Date(year, month - 1, day);
+}
+
+/**
  * @param {unknown} payload
  * @returns {Record<string, SchwabRecord[]>}
  */
@@ -15,17 +31,14 @@ export function groupSchwabByMonth(payload) {
 	const records = Array.isArray(payload) ? payload : [];
 
 	for (const record of records) {
-		let monthLabel;
-		try {
-			monthLabel = monthFormatter.format(
-				new Date(/** @type {string | number | Date} */ (record['Date - Clean']))
-			);
-		} catch (error) {
-			console.error('Invalid Schwab record Date - Clean value:', record['Date - Clean'], record, error);
+		const date = parseDate(record['Date - Clean']);
+		if (!date) {
+			console.error('Invalid Schwab record Date - Clean value:', record['Date - Clean'], record);
 			continue;
 		}
 
-		if (monthLabel && grouped[monthLabel]) {
+		const monthLabel = monthFormatter.format(date);
+		if (grouped[monthLabel]) {
 			grouped[monthLabel].push(record);
 		}
 	}
