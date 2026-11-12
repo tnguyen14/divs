@@ -65,8 +65,9 @@
     const totals = {};
     for (const column of columns) {
       // Round to cents: summing and subtracting decimals can leave tiny
-      // remainders (e.g. 3.6e-12) that would otherwise show as $0.00.
-      totals[column.name] = Math.round(column.value(transactions, totals) * 100) / 100;
+      // remainders (e.g. -3.6e-12) that would otherwise show as -$0.00.
+      // `|| 0` turns -0 into 0 for the same reason.
+      totals[column.name] = Math.round(column.value(transactions, totals) * 100) / 100 || 0;
     }
     return totals;
   }
@@ -74,7 +75,7 @@
   const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
   /** @param {number} amount */
-  const formatAmount = (amount) => (amount ? currency.format(amount) : '');
+  const formatAmount = (amount) => currency.format(amount);
 </script>
 
 <section class="monthly">
